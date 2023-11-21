@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <b-list-group>
+        <b-list-group v-if="tasks.length>0">
           <b-list-group-item button 
             v-for="(task, index) in tasks" :key="task.id"            
             >
@@ -39,6 +39,8 @@
             
           </b-list-group-item>
         </b-list-group>
+
+        <b-alert show v-if="tasks.length==0">You currently have not task on record. Click the button above to create one.</b-alert>
 
         <b-modal id="bv-modal-taskform" hide-footer>
           <div class="d-block">
