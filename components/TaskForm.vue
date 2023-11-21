@@ -1,4 +1,4 @@
-<style>
+<style scoped>
 .task-form {
     border: 1px solid #fff;
     border-radius: 15px;
@@ -8,8 +8,7 @@
 }
 </style>
 <template>
-    <div class="task-form" v-if="isVisible">
-        [id:{{ formId }}]
+    <div class="task-form">
         <form @submit.prevent="save">
             <input class="form-control" placeholder="Title" type="text" v-model="title" required />
             <input class="form-control mt-2" placeholder="Description" type="text" v-model="description"  />
@@ -43,7 +42,7 @@
             due_on: "",
             completed: false,
 
-            isVisible: false
+            isVisible: true
         };
     },
 
@@ -55,7 +54,7 @@
         }
     },
 
-    created() {
+    onMounted() {
         // Listen for the 'close-form' event
         this.$root.$on('close-form', function(formId){
             if (formId === this.formId) {

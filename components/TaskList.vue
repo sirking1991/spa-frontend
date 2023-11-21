@@ -11,13 +11,10 @@
             </div>
             <div class="col-3"  align-v="end">
                 <button class="btn btn-primary btn-sm"
-                  v-on:click="showTaskFormComponent('taskForm0')"
-                >Add task</button>
+                  v-on:click="openTask()">Add task</button>
                 <button class="btn btn-danger btn-sm" v-on:click="logout">Logout</button>
             </div>
         </div>
-
-        <TaskForm :formId="'taskForm0'" />
 
         <b-list-group>
           <b-list-group-item button 
@@ -33,13 +30,38 @@
               </small>
             </p>
             <p class="task-action-buttons" >
-              <button v-if="!task.completed" class="btn btn-secondary btn-sm float-end" v-on:click="completeTask(index)">Mark complete</button>
-              <button v-if="!task.completed" class="btn btn-secondary btn-sm float-end" v-on:click="updateTask(index)">Update</button>
+              <button v-if="!task.completed" class="btn btn-secondary btn-sm float-end" 
+                v-on:click="completeTask(index)">Mark complete</button>
+              <button v-if="!task.completed" class="btn btn-secondary btn-sm float-end" 
+                v-on:click="updateTask(index)">Update</button>
               <button class="btn btn-danger btn-sm float-end" v-on:click="deleteTask(index)">Delete</button>
             </p>
             
           </b-list-group-item>
         </b-list-group>
+
+        <b-modal id="bv-modal-taskform" hide-footer>
+          <div class="d-block">
+            <form @submit.prevent="saveTask">
+              <input class="form-control" placeholder="Title" type="text" v-model="selectedTask.title" required />
+              <input class="form-control mt-2" placeholder="Description" type="text" v-model="selectedTask.description"  />
+              <input class="form-control mt-2" placeholder="Due on" type="date" v-model="selectedTask.due_on"  />
+              <b-form-checkbox
+              class="mt-2"
+              id="completed"
+              v-model="selectedTask.completed"
+              name="completed"
+              value="1"
+              unchecked-value="0"
+              >
+              Completed
+              </b-form-checkbox>
+              <button class="btn btn-primary btn-sm mt-3" type="submit">Save</button>
+              <button class="btn btn-secondary btn-sm mt-3" type="button" 
+                  v-on:click="$bvModal.hide('bv-modal-taskform')">Close</button>
+          </form>
+          </div>
+        </b-modal>        
     </div>
   </template>
   
@@ -49,20 +71,21 @@
       return {
         token: '',
         tasks: [],
+        selectedTask: {id:0, title:'', description:'', due_on:'', completed:false},
       };
     },
     async fetch() {
-    // Check for the token on page load
-    this.token = localStorage.getItem('token');
+      // Check for the token on page load
+      this.token = localStorage.getItem('token');
 
-    if (!this.token) {
-      // Redirect to the login page if no token is present
-      this.$router.push('/login');
-      return;
-    }
-    // Make a request to the Todo API using the token
-    await this.fetchTasks();
-  },
+      if (!this.token) {
+        // Redirect to the login page if no token is present
+        this.$router.push('/login');
+        return;
+      }
+      // Make a request to the Todo API using the token
+      await this.fetchTasks();
+    },
     methods: {
       formattedDueOn(dt) {
       const date = new Date(dt);
@@ -74,11 +97,7 @@
       },          
       async completeTask(index) {
         try {
-          await this.$axios.put('/tasks/' + this.tasks[index].id + '/complete', {}, {
-            headers: {
-              Authorization: `Bearer ${this.token}`,
-            },
-          });
+          await this.$axios.put('/tasks/' + this.tasks[index].id + '/complete', {});
           await this.fetchTasks();
         } catch (error) {
           console.error(error);
@@ -86,15 +105,11 @@
         }
       },  
       updateTask(index) {
-        console.log(this.tasks[index]);
+        this.openTask(index);
       },  
       async deleteTask(index) {
         try {
-        await this.$axios.delete('/tasks/' + this.tasks[index].id, {
-            headers: {
-              Authorization: `Bearer ${this.token}`,
-            },
-          });
+        await this.$axios.delete('/tasks/' + this.tasks[index].id);
           await this.fetchTasks();
         } catch (error) {
           console.error(error);
@@ -104,11 +119,7 @@
       async fetchTasks() {
         try {
           // Make a request to the Todo API using the token
-          const response = await this.$axios.get('/tasks', {
-            headers: {
-              Authorization: `Bearer ${this.token}`,
-            },
-          });
+          const response = await this.$axios.get('/tasks');
   
           // Assuming the tasks are returned in the 'tasks' field of the response
           this.tasks = response.data;
@@ -119,15 +130,36 @@
           // handle error
         }
       },
-
-      hideTaskFormComponent(formId) {
-        console.log('hiding ' + formId);
-        this.$emit('close-form', { formId: formId });
+      openTask(index) {
+        if(!this.tasks[index]){
+          const dt = new Date();          
+          this.selectedTask = {
+            id:0, 
+            title:'', 
+            description:'', 
+            due_on: dt.getFullYear() + '-' + dt.getMonth() +  '-' + dt.getDate(), 
+            completed:false
+          };
+        } else {
+          this.selectedTask = this.tasks[index];
+          const dt = (new Date(this.selectedTask.due_on));
+          this.selectedTask.due_on = dt.getFullYear() + '-' + dt.getMonth() +  '-' + dt.getDate();
+        }
+        this.$bvModal.show('bv-modal-taskform')
       },
-      showTaskFormComponent(formId) {
-        console.log('showing ' + formId);
-        this.$emit('open-form', { formId: formId });
-      },
+      async saveTask() {
+        try {
+          if(this.selectedTask.id==0) {
+            const response = await this.$axios.post('/tasks', this.selectedTask);
+          } else {
+            const response = await this.$axios.put('/tasks/' + this.selectedTask.id, this.selectedTask);
+          }
+          this.fetchTasks();
+          this.$bvModal.hide('bv-modal-taskform')
+        } catch (error) {
+          console.log(error);
+        }
+      }
     },
   };
   </script>
