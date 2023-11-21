@@ -11,7 +11,7 @@
             </div>
             <div class="col-3"  align-v="end">
                 <button class="btn btn-primary btn-sm"
-                  v-on:click="openTask()">Add task</button>
+                  v-on:click="openTaskForm()">Add task</button>
                 <button class="btn btn-danger btn-sm" v-on:click="logout">Logout</button>
             </div>
         </div>
@@ -105,7 +105,7 @@
         }
       },  
       updateTask(index) {
-        this.openTask(index);
+        this.openTaskForm(index);
       },  
       async deleteTask(index) {
         try {
@@ -130,7 +130,7 @@
           // handle error
         }
       },
-      openTask(index) {
+      openTaskForm(index) {
         if(!this.tasks[index]){
           const dt = new Date();          
           this.selectedTask = {
