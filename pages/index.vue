@@ -1,14 +1,14 @@
 <!-- pages/tasks.vue -->
 <template>
-  <TasksList />
+  <RecipeList />
 </template>
 
 <script>
-import TasksList from '~/components/TaskList.vue';
+import RecipeList from '~/components/RecipeList.vue';
 
 export default {
   components: {
-    TasksList,
+    RecipeList,
   },
 };
 </script>
